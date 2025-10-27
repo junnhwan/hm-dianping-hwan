@@ -20,6 +20,8 @@ public class RedisConstants {
 
     public static final Long CACHE_SHOP_LOGICAL_TTL = 10L;
 
+    public static final String ID_PREFIX = "incr";
+
     public static final String SECKILL_STOCK_KEY = "seckill:stock:";
 
     public static final String BLOG_LIKED_KEY = "blog:liked:";
