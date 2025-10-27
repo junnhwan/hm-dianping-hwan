@@ -9,6 +9,7 @@ import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
 import com.hmdp.mapper.ShopMapper;
 import com.hmdp.service.IShopService;
+import com.hmdp.utils.CacheClient;
 import com.hmdp.utils.RedisData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -37,6 +38,9 @@ import static com.hmdp.utils.RedisConstants.*;
 public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IShopService {
 
     @Resource
+    private CacheClient cacheClient;
+
+    @Resource
     private StringRedisTemplate stringRedisTemplate;
 
     /** 缓存重建线程池 */
@@ -44,11 +48,23 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Override
     public Result queryById(Long id) {
+        // 解决缓存穿透
+        Shop shop = cacheClient
+                .queryWithPassThrough(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
+
         // 互斥锁解决缓存击穿
-        // return queryWithMutex(id);
+        // Shop shop = cacheClient
+        //         .queryWithMutex(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
 
         // 逻辑过期解决缓存击穿
-        return queryWithLogicalExpire(id);
+        // Shop shop = cacheClient
+        //         .queryWithLogicalExpire(CACHE_SHOP_KEY, id, Shop.class, this::getById, 20L, TimeUnit.SECONDS);
+
+        if (shop == null) {
+            return Result.fail("店铺不存在！");
+        }
+        // 7.返回
+        return Result.ok(shop);
     }
 
     public Result queryWithLogicalExpire(Long id) {
@@ -181,7 +197,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 //     * @param id 店铺id
 //     * @return 店铺查询结果
 //     */
-//    public Shop queryWithPenetration(Long id) {
+//    public Shop queryWithPassThrough(Long id) {
 //        String cacheShopKey = CACHE_SHOP_KEY + id;
 //        // 1. 从redis中查询数据是否存在
 //        String shopJson = stringRedisTemplate.opsForValue().get(cacheShopKey);
