@@ -8,8 +8,11 @@ import com.hmdp.mapper.VoucherOrderMapper;
 import com.hmdp.service.ISeckillVoucherService;
 import com.hmdp.service.IVoucherOrderService;
 import com.hmdp.utils.RedisIdWorker;
+import com.hmdp.utils.SimpleRedisLock;
 import com.hmdp.utils.UserHolder;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +35,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Resource
     private RedisIdWorker redisIdWorker;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public Result seckillVoucher(Long voucherId) {
@@ -51,12 +56,24 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         // 这里注意要使用代理对象，1）要引入 aspectjweaver 依赖maven坐标  2）启动类加上注解将代理暴露启动
         // 用悲观锁实现一人一单，注意控制锁的粒度，以及 ”Spring事务未提交但锁已释放“ 的处理（获取代理对象）
         Long userId = UserHolder.getUser().getId();
-        synchronized (userId.toString().intern()) {
+
+        // 用redis实现的分布式锁代替synchronized，redis分布式锁优化版本1：
+        SimpleRedisLock lock = new SimpleRedisLock(stringRedisTemplate, "order" + userId);
+        // 获取锁对象
+        boolean isLock = lock.tryLock(1200);
+        if(!isLock) {
+            return Result.fail("不允许重复下单！");
+        }
+        // 用try-finally确保最终释放锁
+        try {
             // 通过代理对象 proxy 调用 createVoucherOrder，就能确保 @Transactional 注解被正确处理，事务正常开启和提交。
             // 避免Spring事务失效，创建代理对象
             IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
             // 代理对象调用方法，确保Spring事务正常工作
             return proxy.createVoucherOrder(voucherId);
+        } finally {
+            // 释放锁
+            lock.unlock();
         }
 
     }
