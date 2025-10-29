@@ -1,3 +1,4 @@
+/*
 package com.hmdp.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -32,6 +33,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+*/
 /**
  * <p>
  * 服务实现类
@@ -39,7 +41,8 @@ import java.util.concurrent.Executors;
  *
  * @author 虎哥
  * @since 2021-12-22
- */
+ *//*
+
 @Service
 @Slf4j
 public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, VoucherOrder> implements IVoucherOrderService {
@@ -69,17 +72,21 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         SECKILL_SCRIPT.setResultType(Long.class);
     }
 
-    /**
+    */
+/**
      * 当这个类初始化时就立马执行，因为当这个类初始化之后随时有可能执行秒杀下单
-     */
+     *//*
+
     @PostConstruct
     private void init() {
         SECKILL_ORDER_EXECUTOR.submit(new voucherOrderHandler());
     }
 
-    /**
+    */
+/**
      * 基于redis的Stream消息队列处理异步秒杀
-     */
+     *//*
+
     private class voucherOrderHandler implements Runnable {
         // 消息队列名称
         private static final String MQ_NAME = "stream.orders";
@@ -143,11 +150,17 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             }
         }
 
-    /*// 阻塞队列，用于保存订单消息
+    */
+/*//*
+/ 阻塞队列，用于保存订单消息
     private final BlockingQueue<VoucherOrder> orderTasks = new ArrayBlockingQueue<>(1024 * 1024);
-    *//**
+    *//*
+*/
+/**
      * 线程任务类，用于处理异步下单逻辑
      *//*
+*/
+/*
     private class voucherOrderHandler implements Runnable {
         @Override
         public void run() {
@@ -161,7 +174,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                     log.error("处理订单异常", e);
                 }
             }
-        }*/
+        }*//*
+
 
         private void handleVoucherOrder(VoucherOrder voucherOrder) {
             // 这里注意不能用ThreadLocal的userId了，因为是子线程。用order取即可
@@ -213,7 +227,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         return Result.ok(orderId);
     }
 
-    /*@Override
+    */
+/*@Override
     public Result seckillVoucher(Long voucherId) {
         // 秒杀优化：基于redis+lua实现秒杀资格判断，基于阻塞队列实现异步秒杀下单
         // 1. 获取用户id和订单id
@@ -247,9 +262,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         proxy = (IVoucherOrderService) AopContext.currentProxy();
         // 4. 返回订单id
         return Result.ok(orderId);
-    }*/
+    }*//*
 
-    /*@Override
+
+    */
+/*@Override
     public Result seckillVoucher(Long voucherId) {
         // 1. 查询优惠券（在SeckillVoucherService中）
         SeckillVoucher voucher = seckillVoucherService.getById(voucherId);
@@ -290,7 +307,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             lock.unlock();
         }
 
-    }*/
+    }*//*
+
 
     @Transactional
     public void createVoucherOrder(VoucherOrder voucherOrder) {
@@ -298,13 +316,16 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         // Long userId = voucherOrder.getUserId();
 
         // 已经在lua脚本判断过一人一单逻辑这里不用重复判断，避免压力数据库
-        /*// 查询订单
+        */
+/*//*
+/ 查询订单
         Long count = query().eq("user_id", userId).eq("voucher_id", voucherOrder.getVoucherId()).count();
         // 订单是否存在
         if (count > 0) {
             log.error("用户已经下过一单！");
             return;
-        }*/
+        }*//*
+
 
         // 4. 扣减库存
         boolean success = seckillVoucherService.update()
@@ -321,3 +342,4 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         save(voucherOrder);
     }
 }
+*/
