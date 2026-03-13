@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
 import com.hmdp.mapper.ShopMapper;
+import com.hmdp.mq.CacheEvictProducer;
 import com.hmdp.service.IShopService;
 import com.hmdp.utils.CacheClient;
 import com.hmdp.utils.RedisData;
@@ -42,6 +43,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private CacheEvictProducer cacheEvictProducer;
 
     /** 缓存重建线程池 */
     public static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
@@ -232,7 +235,12 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         }
         updateById(shop);
         // 2. 再删除缓存
-        stringRedisTemplate.delete(CACHE_SHOP_KEY + id);
+        try {
+            stringRedisTemplate.delete(CACHE_SHOP_KEY + id);
+        } catch (Exception e) {
+            cacheEvictProducer.sendEvict(CACHE_SHOP_KEY + id, 0);
+            log.error("删除店铺缓存失败，已提交补偿消息，id={}", id, e);
+        }
         return Result.ok();
     }
 }

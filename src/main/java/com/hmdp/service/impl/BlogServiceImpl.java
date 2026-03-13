@@ -160,7 +160,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             Long userId = follow.getUserId();
             // 推送
             String key = FEED_KEY + userId;
-            stringRedisTemplate.opsForZSet().add(key, userId.toString(), System.currentTimeMillis());
+            stringRedisTemplate.opsForZSet().add(key, blog.getId().toString(), System.currentTimeMillis());
         }
         // 6.返回id
         return Result.ok(blog.getId());

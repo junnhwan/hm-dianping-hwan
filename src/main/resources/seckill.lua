@@ -15,11 +15,12 @@ local orderId = ARGV[3]
 -- 库存key
 local stockKey = 'seckill:stock:' .. voucherId
 -- 订单key
-local orderKey = 'seckill:order' .. voucherId
+local orderKey = 'seckill:order:' .. voucherId
 
 -- 3.脚本业务(符合资格返回0，不符合返回非0：1代表库存不足，2代表已下过单)
--- 3.1 判断库存，不足则返回1, 注意redis返回的是字符串，这里要转成数字再进行判断
-if (redis.call('get', stockKey) <= 0) then
+-- 3.1 判断库存，不足则返回1
+local stock = tonumber(redis.call('get', stockKey) or '0')
+if (stock <= 0) then
     return 1
 end
 -- 3.2 判断一人一单，不满足则返回2
@@ -30,8 +31,5 @@ end
 redis.call('incrby', stockKey, -1)
 -- 3.4 下单（保存用户）
 redis.call('sadd', orderKey, userId)
--- 3.5 发送订单信息到消息队列
-redis.call('xadd', 'streams.orders', '*', 'userId', userId, 'voucherId', voucherId, 'id', orderId)
-
--- 3.6 符合资格，返回0
+-- 3.5 符合资格，返回0
 return 0
