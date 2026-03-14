@@ -22,11 +22,11 @@ import javax.annotation.Resource;
 @RequestMapping("/voucher-order")
 public class VoucherOrderController {
 
-    @Resource
+    /*@Resource
     private IVoucherOrderService voucherOrderService;
 
     @PostMapping("seckill/{id}")
     public Result seckillVoucher(@PathVariable("id") Long voucherId) {
         return voucherOrderService.seckillVoucher(voucherId);
-    }
+    }*/
 }
