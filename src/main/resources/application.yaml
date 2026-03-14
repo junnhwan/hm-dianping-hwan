@@ -5,11 +5,11 @@ spring:
     name: hmdp
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${MYSQL_URL:jdbc:mysql://127.0.0.1:3306/hmdp?useSSL=false&serverTimezone=UTC}
+    url: ${MYSQL_URL:jdbc:mysql://106.12.190.62:3306/hmdp?useSSL=false&serverTimezone=UTC}
     username: ${MYSQL_USER:root}
     password: ${MYSQL_PASSWORD:123456}
   redis:
-    host: ${REDIS_HOST:127.0.0.1}
+    host: ${REDIS_HOST:106.12.190.62}
     port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:}
     lettuce:
@@ -19,7 +19,7 @@ spring:
         min-idle: 1
         time-between-eviction-runs: 10s
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP:127.0.0.1:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:106.12.190.62:9094}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
